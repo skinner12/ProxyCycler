@@ -1,0 +1,20 @@
+services:
+  squid:
+    image: b4tman/squid:latest
+    container_name: squid_proxy
+    ports:
+      - "3128:3128"
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf
+      - ./proxy.txt:/etc/squid/proxy.txt
+      - ./generate_squid_conf.sh:/etc/squid/generate_squid_conf.sh
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+    ulimits:
+      nofile:
+        soft: "65536"
+        hard: "65536"
