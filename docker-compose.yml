@@ -16,5 +16,5 @@ services:
           memory: 256M
     ulimits:
       nofile:
-        soft: "65536"
-        hard: "65536"
+        soft: 65536
+        hard: 65536
