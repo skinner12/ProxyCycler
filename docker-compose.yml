@@ -5,21 +5,44 @@ services:
     ports:
       - "3128:3128"
     volumes:
-      - ./squid.conf:/etc/squid/squid.conf
-      - ./proxy.txt:/etc/squid/proxy.txt
-      - ./generate_squid_conf.sh:/etc/squid/generate_squid_conf.sh
+      # SELinux: Add :Z flag to auto-label volumes for SELinux contexts
+      # This fixes "Permission denied" on RHEL/CentOS/Fedora systems
+      - ./squid.conf:/etc/squid/squid.conf:Z
+      - ./proxy.txt:/etc/squid/proxy.txt:Z
+      - ./generate_squid_conf.sh:/etc/squid/generate_squid_conf.sh:Z
+
+    # Security options to bypass SELinux/AppArmor restrictions
+    # IMPORTANT: These reduce container isolation - use with caution
+    security_opt:
+      # Disable AppArmor (Ubuntu/Debian systems)
+      - apparmor:unconfined
+      # Disable SELinux labeling (RHEL/CentOS/Fedora systems)
+      - label:disable
+      # Disable seccomp filtering for syscalls
+      - seccomp:unconfined
+      # Prevent privilege escalation (security best practice)
+      - no-new-privileges:true
+
+    # Linux capabilities for DNS socket creation
+    cap_add:
+      - NET_RAW          # Create raw sockets for DNS
+      - NET_BIND_SERVICE # Bind to privileged ports
+      - NET_ADMIN        # Network administration operations
+
+    # Resource limits
     deploy:
       resources:
         limits:
           memory: 512M
         reservations:
           memory: 256M
+
+    # File descriptor limits
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
-    # Linux-specific: Add capabilities for DNS socket creation
-    # Required to fix "Could not create a DNS socket" error on Linux
-    cap_add:
-      - NET_RAW
-      - NET_BIND_SERVICE
+
+    # ALTERNATIVE: Uncomment below for privileged mode (NOT RECOMMENDED for production)
+    # This bypasses ALL security restrictions but creates significant security risks
+    # privileged: true

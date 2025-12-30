@@ -9,6 +9,13 @@ cat > $SQUID_CONF <<EOL
 # Port on which Squid listens
 http_port 3128
 
+# Fix DNS socket for non-root user (b4tman/squid runs as UID 3128)
+# Forces IPv4 binding to avoid "Permission denied" on DNS socket creation
+udp_outgoing_address 0.0.0.0
+
+# Explicit DNS servers (avoids container DNS resolution issues)
+dns_nameservers 8.8.8.8 1.1.1.1
+
 # Limit the memory used for cache in RAM
 cache_mem 32 MB
 
