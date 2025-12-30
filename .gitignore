@@ -1,2 +1,6 @@
 proxy.txt
 squid.conf
+
+# IDE/Editor configs
+.claude/
+.serena/
