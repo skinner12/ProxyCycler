@@ -26,11 +26,9 @@ do
     echo "cache_peer_access $ip allow all" >> $SQUID_CONF
 done < $PROXY_FILE
 
-# Add ACL and access directives to the squid.conf file
+# Add access directives to the squid.conf file
+# Note: 'all' is a built-in ACL in Squid and should not be redefined
 cat >> $SQUID_CONF <<EOL
-
-# Define an ACL for all traffic
-acl all src 0.0.0.0/0
 
 # Allow traffic through the external proxies
 # Block direct access
@@ -43,8 +41,8 @@ http_access allow all
 access_log /var/log/squid/access.log squid
 cache_log /var/log/squid/cache.log
 
-# Directory for core dumps
-coredump_dir /var/spool/squid
+# Directory for core dumps (use existing directory in container)
+coredump_dir /tmp
 EOL
 
 echo "File $SQUID_CONF generated successfully."

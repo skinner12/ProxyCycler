@@ -18,3 +18,8 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    # Linux-specific: Add capabilities for DNS socket creation
+    # Required to fix "Could not create a DNS socket" error on Linux
+    cap_add:
+      - NET_RAW
+      - NET_BIND_SERVICE
