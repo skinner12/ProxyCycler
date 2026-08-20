@@ -136,7 +136,9 @@ done < "$PROXY_FILE"
 
 # --- scrittura (atomica: la config precedente sopravvive a un errore) --------
 
-tmp_conf=$(mktemp "${TMPDIR:-/tmp}/squid.conf.XXXXXX")
+# Il file temporaneo vive accanto alla destinazione: il mv finale e' quindi un
+# rename atomico sullo stesso filesystem (niente copia cross-device).
+tmp_conf=$(mktemp "${SQUID_CONF}.XXXXXX") || die "impossibile creare un file temporaneo accanto a $SQUID_CONF"
 trap 'rm -f "$tmp_conf"' EXIT
 
 cat > "$tmp_conf" <<EOL
@@ -173,6 +175,12 @@ cache_log /var/log/squid/cache.log
 # Directory for core dumps (use existing directory in container)
 coredump_dir /tmp
 EOL
+
+# mktemp crea il file con permessi 0600. Squid gira come utente non-root
+# (UID 3128 nell'immagine b4tman/squid) e deve poter leggere la config montata
+# dall'host: senza questo chmod il container muore con
+# "FATAL: Unable to open configuration file: /etc/squid/squid.conf: (13) Permission denied".
+chmod 644 "$tmp_conf"
 
 mv "$tmp_conf" "$SQUID_CONF"
 trap - EXIT

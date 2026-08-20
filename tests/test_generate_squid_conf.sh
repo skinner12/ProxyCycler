@@ -74,6 +74,11 @@ run_generator() {
     return 0
 }
 
+# file_mode <path> -- permessi in ottale, portabile GNU/BSD
+file_mode() {
+    stat -c '%a' "$1" 2>/dev/null || stat -f '%Lp' "$1"
+}
+
 # =============================================================================
 # TESTS
 # =============================================================================
@@ -188,6 +193,17 @@ assert_grep "$CONF" '^http_port 3128$' "http_port presente"
 assert_grep "$CONF" '^never_direct allow all$' "never_direct presente"
 assert_grep "$CONF" '^http_access allow all$' "http_access presente"
 assert_grep "$CONF" '^dns_nameservers ' "dns_nameservers presente"
+
+describe "14. la squid.conf generata e leggibile dall utente non-root del container (UID 3128)"
+run_generator 'alice:s3cret:203.0.113.10:3128
+'
+assert_eq "$STATUS" "0" "esce con codice 0"
+MODE=$(file_mode "$CONF")
+if [ $(( 10#$MODE % 10 & 4 )) -ne 0 ]; then
+    pass "il bit di lettura 'other' e impostato (mode $MODE)"
+else
+    fail "il bit di lettura 'other' e impostato" "mode attuale: $MODE -- squid nel container gira come UID 3128 e non puo leggere il file"
+fi
 
 # =============================================================================
 
